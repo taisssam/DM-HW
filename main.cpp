@@ -45,4 +45,30 @@ int main() {
 
     cout << "----------------------------------";
 
+    //Task 9 - MST
+    cout << '\n' << "-----------||| TASK 9 |||-----------";
+    cout << '\n';
+    Europa.KruskalMST();
+    cout << '\n';
+
+    cout << "----------------------------------";
+
+    //Task 10 - Prufer and Binary
+    cout << '\n' << "-----------||| TASK 10 |||-----------";
+    cout << '\n';
+    vector<int> pruferCode = Europa.generatePruferCode(); // Генерация кода Прюфера из MST
+    cout << "Prufer Code: ";
+    for (int code : pruferCode) {
+        cout << code << " ";
+    }
+    cout << "\n";
+
+    vector<int> binaryCode = Europa.generateBinaryCode();
+    cout << "Binary Code: ";
+    for (int bit : binaryCode) {
+        cout << bit << " ";
+    }
+    cout << '\n';
+
+    cout << "----------------------------------";
 }
