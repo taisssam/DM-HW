@@ -1,6 +1,5 @@
 #include "Graph.h"
 
-
 vector<int> visited;
 vector<int> time_enter;
 int timer;
@@ -19,7 +18,9 @@ Graph::Graph(const string& filename){
     diam = 0;
     rad = 0;
 
+    Graph::AddWeightedEdges();
 }
+
 
 void Graph::ReadGraph(const string& filename) {
     ifstream file(filename);
@@ -247,74 +248,64 @@ void Graph::CountCyclomaticNum() {
     cout << "Cyclomatic number: " << cyclomatic_number << endl;
 }
 
-void Graph::BronKerbosch(set<int> clique, set<int> candidates, set<int> excluded, const vector<set<int>>& adjacency_list) {
-    if (candidates.empty() && excluded.empty()) {
-        bool maximal = true;
-        for (int vertex : clique) {
-            for (int neighbor : clique) {
-                if (vertex != neighbor && adjacency_list[vertex].find(neighbor) == adjacency_list[vertex].end()) {
-                    maximal = false;
-                    break;
-                }
-            }
-            if (!maximal) break;
-        }
-        if (maximal) {
-            for (int vertex : clique) {
-                cout << vertex << ' ';
-            }
-            cout << '\n';
-        }
+void Graph::BronKerbosch(set<int> R, set<int> P, set<int> X, vector<set<int>>& cliques) {
+    if (P.empty() && X.empty()) {
+        cliques.push_back(R);
         return;
     }
 
-    set<int> candidates_copy = candidates;
-    for (int vertex : candidates_copy) {
-        set<int> new_clique = clique;
-        new_clique.insert(vertex);
+    set<int> P_copy = P;
+    for (int vertex : P_copy) {
+        set<int> newR = R;
+        newR.insert(vertex);
 
-        set<int> new_candidates;
+        set<int> newP;
+        set<int> newX;
+
         for (int neighbor : adjacency_list[vertex]) {
-            if (candidates.find(neighbor) != candidates.end()) {
-                new_candidates.insert(neighbor);
+            if (P.find(neighbor) != P.end()) {
+                newP.insert(neighbor);
             }
         }
 
-        set<int> new_excluded;
         for (int neighbor : adjacency_list[vertex]) {
-            if (excluded.find(neighbor) != excluded.end()) {
-                new_excluded.insert(neighbor);
+            if (X.find(neighbor) != X.end()) {
+                newX.insert(neighbor);
             }
         }
 
-        BronKerbosch(new_clique, new_candidates, new_excluded, adjacency_list);
-        candidates.erase(vertex);
-        excluded.insert(vertex);
+        BronKerbosch(newR, newP, newX, cliques);
+
+        P.erase(vertex);
+        X.insert(vertex);
     }
 }
-
-vector<set<int>> Graph::BuildAdjacencyList() {
-    vector<set<int>> adjacency_list(adjacency_matrix.size());
-    for (int i = 0; i < adjacency_matrix.size(); ++i) {
-        for (int j = 0; j < adjacency_matrix[i].size(); ++j) {
-            if (adjacency_matrix[i][j] == 1) {
-                adjacency_list[i].insert(j);
-                adjacency_list[j].insert(i);
-            }
-        }
-    }
-    return adjacency_list;
-}
-
-
 
 void Graph::FindMaximalCliques() {
-    vector<set<int>> adjacency_list = BuildAdjacencyList();
-    set<int> clique, candidates, excluded;
-    for (int i = 0; i < adjacency_matrix.size(); ++i) {
-        candidates.insert(i);
+    set<int> R, P, X;
+    vector<set<int>> cliques;
+
+    for (int i = 0; i < adjacency_list.size(); ++i) {
+        P.insert(i);
     }
-    BronKerbosch(clique, candidates, excluded, adjacency_list);
+
+    BronKerbosch(R, P, X, cliques);
+
+    size_t max_size = 0;
+    for (const auto& clique : cliques) {
+        if (clique.size() > max_size) {
+            max_size = clique.size();
+        }
+    }
+
+    for (const auto& clique : cliques) {
+        if (clique.size() == max_size) {
+            for (int vertex : clique) {
+                cout << vertex + 1 << ' ';
+            }
+            cout << '\n';
+        }
+    }
 }
 
 void Graph::Vcomp() {
@@ -477,87 +468,207 @@ void Graph::CountChromaticNum() {
     cout << "Chromatic number: " << uniq_colors.size();
 }
 
+vector<WeightedEdge> weighted_edges_list;
+void Graph::AddWeightedEdge(int from, int to, double weight) {
+    weighted_edges_list.push_back(WeightedEdge(from - 1, to - 1, weight));
+}
+
+void Graph::AddWeightedEdges() {
+    AddWeightedEdge(1, 19, 501.4);
+    AddWeightedEdge(1, 33, 153.5);
+    AddWeightedEdge(1, 31, 132);
+    AddWeightedEdge(1, 40, 391.2);
+    AddWeightedEdge(2, 43, 494.3);
+    AddWeightedEdge(2, 16, 708.3);
+    AddWeightedEdge(3, 5, 452.9);
+    AddWeightedEdge(3, 18, 170);
+    AddWeightedEdge(3, 46, 994.5);
+    AddWeightedEdge(4, 12, 252.8);
+    AddWeightedEdge(4, 17, 524);
+    AddWeightedEdge(4, 45, 685.1);
+    AddWeightedEdge(4, 25, 527.7);
+    AddWeightedEdge(4, 23, 765.5);
+    AddWeightedEdge(4, 42, 276.6);
+    AddWeightedEdge(4, 20, 214.7);
+    AddWeightedEdge(4, 41, 57.3);
+    AddWeightedEdge(5, 18, 447.6);
+    AddWeightedEdge(5, 38, 1930.3);
+    AddWeightedEdge(5, 46, 1445.4);
+    AddWeightedEdge(6, 38, 677.5);
+    AddWeightedEdge(6, 24, 403.6);
+    AddWeightedEdge(6, 26, 172.1);
+    AddWeightedEdge(6, 35, 476.9);
+    AddWeightedEdge(6, 47, 434.2);
+    AddWeightedEdge(7, 32, 173);
+    AddWeightedEdge(7, 16, 265.1);
+    AddWeightedEdge(7, 17, 651.2);
+    AddWeightedEdge(7, 27, 187.7);
+    AddWeightedEdge(8, 10, 289.4);
+    AddWeightedEdge(8, 31, 172.1);
+    AddWeightedEdge(8, 40, 196.9);
+    AddWeightedEdge(9, 37, 296.2);
+    AddWeightedEdge(9, 40, 329.7);
+    AddWeightedEdge(9, 33, 174.1);
+    AddWeightedEdge(9, 19, 525.5);
+    AddWeightedEdge(9, 46, 855.1);
+    AddWeightedEdge(10, 42, 117);
+    AddWeightedEdge(10, 20, 300);
+    AddWeightedEdge(10, 40, 368.2);
+    AddWeightedEdge(10, 31, 457.6);
+    AddWeightedEdge(12, 17, 279.7);
+    AddWeightedEdge(12, 41, 292.1);
+    AddWeightedEdge(12, 35, 518.5);
+    AddWeightedEdge(13, 17, 356.8);
+    AddWeightedEdge(24, 14, 279.6);
+    AddWeightedEdge(38, 14, 870.4);
+    AddWeightedEdge(15, 38, 895);
+    AddWeightedEdge(15, 44, 397.4);
+    AddWeightedEdge(15, 34, 790.6);
+    AddWeightedEdge(16, 17, 879);
+    AddWeightedEdge(16, 27, 288);
+    AddWeightedEdge(16, 45, 436.3);
+    AddWeightedEdge(16, 23, 1106.6);
+    AddWeightedEdge(16, 43, 1052.5);
+    AddWeightedEdge(17, 32, 577.6);
+    AddWeightedEdge(17, 27, 602.4);
+    AddWeightedEdge(17, 45, 752.3);
+    AddWeightedEdge(17, 35, 519.5);
+    AddWeightedEdge(18, 38, 1648);
+    AddWeightedEdge(18, 46, 1026);
+    AddWeightedEdge(19, 46, 819);
+    AddWeightedEdge(19, 33, 487.8);
+    AddWeightedEdge(20, 41, 160.1);
+    AddWeightedEdge(20, 42, 381.7);
+    AddWeightedEdge(20, 40, 317.3);
+    AddWeightedEdge(20, 37, 644.1);
+    AddWeightedEdge(23, 49, 2.7);
+    AddWeightedEdge(23, 39, 227);
+    AddWeightedEdge(23, 45, 689.6);
+    AddWeightedEdge(23, 42, 489.5);
+    AddWeightedEdge(24, 38, 844.6);
+    AddWeightedEdge(24, 26, 262.4);
+    AddWeightedEdge(25, 45, 158.8);
+    AddWeightedEdge(26, 38, 792.8);
+    AddWeightedEdge(26, 35, 394);
+    AddWeightedEdge(29, 47, 400.7);
+    AddWeightedEdge(29, 37, 357.6);
+    AddWeightedEdge(30, 16, 690.2);
+    AddWeightedEdge(31, 40, 281);
+    AddWeightedEdge(33, 40, 323.2);
+    AddWeightedEdge(34, 44, 418.8);
+    AddWeightedEdge(34, 38, 1649.8);
+    AddWeightedEdge(35, 38, 1154.3);
+    AddWeightedEdge(35, 47, 691.6);
+    AddWeightedEdge(35, 41, 530.4);
+    AddWeightedEdge(36, 43, 503.9);
+    AddWeightedEdge(37, 47, 746.8);
+    AddWeightedEdge(37, 40, 450);
+    AddWeightedEdge(38, 47, 756.6);
+    AddWeightedEdge(41, 47, 1004.6);
+    AddWeightedEdge(47, 20, 901.4);
+}
+
+void Graph::KruskalMST() {
+    sort(weighted_edges_list.begin(), weighted_edges_list.end());
+
+    DisjointSetUnion dsu(vertex_count + 1);
+
+    double total_weight = 0;
+    mstEdges.clear();
+
+    for (const auto& edge : weighted_edges_list) {
+        if (dsu.FindSet(edge.from) != dsu.FindSet(edge.to)) {
+            dsu.UnionSets(edge.from, edge.to);
+            total_weight += edge.weight;
+            mstEdges.push_back({edge.from, edge.to});
+            cout << "Edge (" << edge.from + 1 << ", " << edge.to + 1 << ") with weight: " << edge.weight << endl;
+        }
+    }
+
+    cout << "Total weight of MST: " << total_weight << endl;
+
+    adjacencyList.clear();
+    for (const auto& edge : mstEdges) {
+        adjacencyList[edge.first].push_back(edge.second);
+        adjacencyList[edge.second].push_back(edge.first);
+    }
+}
+
+vector<int> Graph::generatePruferCode() {
+    map<int, vector<int>> adjacencyListForPrufer;
+    for (const auto& edge : mstEdges) {
+        adjacencyListForPrufer[edge.first].push_back(edge.second);
+        adjacencyListForPrufer[edge.second].push_back(edge.first);
+    }
+
+    map<int, int> vertexDegree;
+    for (const auto& item : adjacencyListForPrufer) {
+        vertexDegree[item.first] = item.second.size();
+    }
+
+    vector<int> leaves;
+    for (const auto& item : vertexDegree) {
+        if (item.second == 1) {
+            leaves.push_back(item.first);
+        }
+    }
+    sort(leaves.begin(), leaves.end());
+
+    vector<int> pruferCode;
+    while (adjacencyListForPrufer.size() > 2) {
+        int leaf = leaves.front();
+        leaves.erase(leaves.begin());
+
+        int neighbor = adjacencyListForPrufer[leaf][0];
+
+        pruferCode.push_back(neighbor);
+
+        --vertexDegree[neighbor];
+
+        adjacencyListForPrufer[neighbor].erase(remove(adjacencyListForPrufer[neighbor].begin(), adjacencyListForPrufer[neighbor].end(), leaf), adjacencyListForPrufer[neighbor].end());
+
+        if (vertexDegree[neighbor] == 1) {
+            leaves.push_back(neighbor);
+            sort(leaves.begin(), leaves.end());
+        }
+
+        adjacencyListForPrufer.erase(leaf);
+        vertexDegree.erase(leaf);
+    }
+
+    return pruferCode;
+}
+
+void dfsForBinaryCode(int vertex, map<int, bool>& visited, vector<int>& ans, const map<int, vector<int>>& graph) {
+    visited[vertex] = true;
+    for (int neighbor : graph.at(vertex)) {
+        if (!visited[neighbor]) {
+            ans.push_back(1);
+            dfsForBinaryCode(neighbor, visited, ans, graph);
+        }
+    }
+    ans.push_back(0);
+}
+
+vector<int> Graph::generateBinaryCode() {
+    map<int, bool> visited;
+    for (const auto& item : adjacencyList) {
+        visited[item.first] = false;
+    }
+
+    vector<int> binaryCode;
+    int startVertex = adjacencyList.begin()->first;
+    dfsForBinaryCode(startVertex, visited, binaryCode, adjacencyList);
+
+    return binaryCode;
+}
 
 struct Edge {
     int u, v;
     double weight;
 
     Edge(int u, int v, double weight) : u(u), v(v), weight(weight) {}
-
-    // Оператор для сравнения ребер по весу
     bool operator<(const Edge& other) const {
         return weight < other.weight;
     }
 };
-
-class DisjointSetUnion {
-private:
-    vector<int> parents;
-    vector<int> rank;
-
-public:
-    DisjointSetUnion(int n) {
-        parents.resize(n + 1);
-        rank.resize(n + 1);
-
-        for (int i = 1; i <= n; ++i) {
-            parents[i] = i;
-            rank[i] = 0;
-        }
-    }
-
-    int FindSet(int u) {
-        if (u != parents[u]) {
-            parents[u] = FindSet(parents[u]);
-        }
-        return parents[u];
-    }
-
-    void UnionSets(int u, int v) {
-        u = FindSet(u);
-        v = FindSet(v);
-
-        if (u != v) {
-            if (rank[u] < rank[v]) {
-                swap(u, v);
-            }
-            parents[v] = u;
-            if (rank[u] == rank[v]) {
-                ++rank[u];
-            }
-        }
-    }
-};
-
-//void Graph::KruskalMST() {
-//    vector<Edge> sorted_edges;
-//
-//
-//    for (int u = 0; u < adjacency_list.size(); ++u) {
-//        for (Edge edge : adjacency_list[u]) {
-//            sorted_edges.push_back(edge);
-//        }
-//    }
-//
-//
-//    sort(sorted_edges.begin(), sorted_edges.end());
-//
-//    DisjointSetUnion dsu(vertex_count);
-//
-//    vector<Edge> result_edges;
-//
-//    for (const auto& edge : sorted_edges) {
-//        int u = edge.u;
-//        int v = edge.v;
-//        double weight = edge.weight;
-//
-//        if (dsu.FindSet(u) != dsu.FindSet(v)) {
-//            result_edges.push_back(edge);
-//            dsu.UnionSets(u, v);
-//        }
-//    }
-//
-//    for (const auto& edge : result_edges) {
-//        cout << edge.u << " - " << edge.v << ": " << edge.weight << endl;
-//    }
-//}
